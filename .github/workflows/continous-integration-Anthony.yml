@@ -1,0 +1,33 @@
+name: Continuous Integration - Anthony
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Pruebas de SAST
+        run: echo "Ejecución de pruebas de SAST"
+
+      - name: Crear archivo de credenciales
+        env:
+          USERNAME: ${{ secrets.USERNAME }}
+          PASSWORD: ${{ secrets.PASSWORD }}
+        run: |
+          envsubst < credentials.ini.tpl > credentials.ini
+          cat credentials.ini
+
+      - name: Subir credentials.ini como artefacto
+        uses: actions/upload-artifact@v4
+        with:
+          name: credentials-ini
+          path: credentials.ini
+
+      - name: Build docker image
+        run: docker build -t devops_ws . --tag devops_ws_:$(date +%s)
