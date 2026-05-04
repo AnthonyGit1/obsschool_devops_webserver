@@ -12,7 +12,12 @@ pipeline {
             parallel {
                 stage('Pruebas de SAST') {
                     steps {
-                        echo 'Ejecución de pruebas de SAST'
+                        withSonarQubeEnv('SonarQube') {
+                            sh "${tool('SonarQubeScanner')}/bin/sonar-scanner"
+                        }
+                        timeout(time: 5, unit: 'MINUTES') {
+                            waitForQualityGate abortPipeline: false
+                        }
                     }
                 }
                 stage('Imprimir Env') {
