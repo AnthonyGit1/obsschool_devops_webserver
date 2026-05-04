@@ -1,0 +1,42 @@
+name: Pull Request Analysis - Anthony
+
+on:
+  pull_request:
+
+jobs:
+  pr-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Analizar el código
+        run: echo "Realizando análisis de SAST"
+
+      - name: Comprobar si se cumplen los requisitos
+        id: check
+        run: |
+          if [ -f "allow_pull_request.txt" ]; then
+            echo "allow_pull=true" >> $GITHUB_OUTPUT
+            echo "Archivo allow_pull_request.txt encontrado → allow_pull=true"
+          else
+            echo "allow_pull=false" >> $GITHUB_OUTPUT
+            echo "Archivo allow_pull_request.txt NO encontrado → allow_pull=false"
+          fi
+
+      - name: Subir allow_pull_request.txt como artefacto
+        if: steps.check.outputs.allow_pull == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: allow-pull-request
+          path: allow_pull_request.txt
+
+      - name: Permitir Pull Request
+        if: steps.check.outputs.allow_pull == 'true'
+        run: echo "Permitiendo Pull Request"
+
+      - name: Impedir Pull Request
+        if: steps.check.outputs.allow_pull == 'false'
+        run: |
+          echo "Build fallida. Impidiendo Pull Request"
+          exit 1
